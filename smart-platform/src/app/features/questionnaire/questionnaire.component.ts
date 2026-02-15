@@ -1,4 +1,17 @@
 import { Component } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+
+type QuestionnaireControlName =
+  | 'fullName'
+  | 'panNumber'
+  | 'annualSalary'
+  | 'otherIncome'
+  | 'section80C'
+  | 'section80D'
+  | 'tdsPaid'
+  | 'advanceTax'
+  | 'declarationAccepted';
 
 @Component({
   selector: 'app-questionnaire',
@@ -6,11 +19,71 @@ import { Component } from '@angular/core';
   styleUrls: ['./questionnaire.component.scss']
 })
 export class QuestionnaireComponent {
-  readonly steps = [
-    'Personal details',
-    'Income details',
-    'Deductions',
-    'Tax paid',
-    'Review declarations'
+  currentStep = 0;
+  readonly stepLabels = ['Personal', 'Income', 'Deductions', 'Tax Paid', 'Review'];
+
+  readonly questionnaireForm = this.formBuilder.nonNullable.group({
+    fullName: ['', [Validators.required, Validators.minLength(2)]],
+    panNumber: ['', [Validators.required, Validators.pattern(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/)]],
+    annualSalary: [0, [Validators.required, Validators.min(1)]],
+    otherIncome: [0, [Validators.min(0)]],
+    section80C: [0, [Validators.min(0)]],
+    section80D: [0, [Validators.min(0)]],
+    tdsPaid: [0, [Validators.required, Validators.min(0)]],
+    advanceTax: [0, [Validators.min(0)]],
+    declarationAccepted: [false, [Validators.requiredTrue]]
+  });
+
+  constructor(
+    private readonly formBuilder: FormBuilder,
+    private readonly router: Router
+  ) {}
+
+  get progressPercent(): number {
+    return Math.round(((this.currentStep + 1) / this.stepLabels.length) * 100);
+  }
+
+  nextStep(): void {
+    if (!this.isStepValid(this.currentStep)) {
+      this.markStepAsTouched(this.currentStep);
+      return;
+    }
+
+    if (this.currentStep < this.stepLabels.length - 1) {
+      this.currentStep += 1;
+    }
+  }
+
+  previousStep(): void {
+    if (this.currentStep > 0) {
+      this.currentStep -= 1;
+    }
+  }
+
+  submitQuestionnaire(): void {
+    if (!this.isStepValid(4)) {
+      this.markStepAsTouched(4);
+      return;
+    }
+
+    void this.router.navigate(['/summary']);
+  }
+
+  private isStepValid(step: number): boolean {
+    const controls = this.stepControlMap[step];
+    return controls.every((name) => this.questionnaireForm.controls[name].valid);
+  }
+
+  private markStepAsTouched(step: number): void {
+    const controls = this.stepControlMap[step];
+    controls.forEach((name) => this.questionnaireForm.controls[name].markAsTouched());
+  }
+
+  private readonly stepControlMap: QuestionnaireControlName[][] = [
+    ['fullName', 'panNumber'],
+    ['annualSalary', 'otherIncome'],
+    ['section80C', 'section80D'],
+    ['tdsPaid', 'advanceTax'],
+    ['declarationAccepted']
   ];
 }
