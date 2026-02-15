@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AppStateService } from '../../core/app-state.service';
 
 type QuestionnaireControlName =
   | 'fullName'
@@ -36,8 +37,15 @@ export class QuestionnaireComponent {
 
   constructor(
     private readonly formBuilder: FormBuilder,
-    private readonly router: Router
-  ) {}
+    private readonly router: Router,
+    private readonly appState: AppStateService
+  ) {
+    const snapshot = this.appState.questionnaireSnapshot;
+    if (snapshot.fullName) {
+      this.questionnaireForm.patchValue(snapshot);
+      this.questionnaireForm.controls.declarationAccepted.setValue(true);
+    }
+  }
 
   get progressPercent(): number {
     return Math.round(((this.currentStep + 1) / this.stepLabels.length) * 100);
@@ -65,6 +73,18 @@ export class QuestionnaireComponent {
       this.markStepAsTouched(4);
       return;
     }
+
+    const formValue = this.questionnaireForm.getRawValue();
+    this.appState.saveQuestionnaire({
+      fullName: formValue.fullName,
+      panNumber: formValue.panNumber,
+      annualSalary: formValue.annualSalary,
+      otherIncome: formValue.otherIncome,
+      section80C: formValue.section80C,
+      section80D: formValue.section80D,
+      tdsPaid: formValue.tdsPaid,
+      advanceTax: formValue.advanceTax
+    });
 
     void this.router.navigate(['/summary']);
   }

@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AppStateService } from '../../core/app-state.service';
 
 type AuthTab = 'login' | 'register';
 
@@ -27,7 +28,8 @@ export class AuthComponent {
 
   constructor(
     private readonly formBuilder: FormBuilder,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly appState: AppStateService
   ) {}
 
   setTab(tab: AuthTab): void {
@@ -40,6 +42,11 @@ export class AuthComponent {
       this.loginForm.markAllAsTouched();
       return;
     }
+
+    this.appState.updateUser({
+      fullName: 'Returning User',
+      email: this.loginForm.controls.email.value
+    });
 
     this.successMessage = 'Login successful. Redirecting to dashboard...';
     window.setTimeout(() => {
@@ -60,6 +67,11 @@ export class AuthComponent {
       this.registerForm.controls.confirmPassword.setErrors({ mismatch: true });
       return;
     }
+
+    this.appState.updateUser({
+      fullName: payload.fullName,
+      email: payload.email
+    });
 
     this.successMessage = 'Account created successfully. Redirecting to dashboard...';
     window.setTimeout(() => {
