@@ -1,0 +1,15 @@
+<section class="page-card p-4 p-md-5">
+  <h1 class="h3 text-primary mb-2">DigiLocker Integration</h1>
+  <p class="text-secondary mb-4">Securely fetch documents to reduce manual data entry.</p>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-6" *ngFor="let doc of documents">
+      <div class="doc-item d-flex align-items-center justify-content-between rounded-4 p-3">
+        <span>{{ doc }}</span>
+        <span class="badge text-bg-light">Not linked</span>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" class="btn btn-primary">Connect DigiLocker</button>
+</section>

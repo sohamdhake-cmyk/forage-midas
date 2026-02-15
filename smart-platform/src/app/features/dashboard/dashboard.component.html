@@ -1,0 +1,22 @@
+<section class="page-card p-4 p-md-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <h1 class="h3 text-primary mb-1">Dashboard</h1>
+      <p class="text-secondary mb-0">Track your ITR journey and complete pending steps quickly.</p>
+    </div>
+    <a class="btn btn-primary" routerLink="/questionnaire">Continue Filing</a>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-4" *ngFor="let card of cards">
+      <div class="stat-card border rounded-4 p-3 h-100">
+        <p class="small text-muted mb-2">{{ card.title }}</p>
+        <h2 class="h4 mb-0 text-{{ card.tone }}">{{ card.value }}</h2>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-info mb-0" role="alert">
+    Tip: Upload your Form 16 in DigiLocker to auto-fill salary details.
+  </div>
+</section>

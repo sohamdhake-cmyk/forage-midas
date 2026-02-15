@@ -1,0 +1,17 @@
+.step-dot {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #0d6efd, #4f46e5);
+}
+
+.timeline-item:not(:last-child) {
+  border-left: 2px dashed #dbeafe;
+  margin-left: 1rem;
+  padding-left: 1.5rem;
+}
