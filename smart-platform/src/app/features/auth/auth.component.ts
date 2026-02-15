@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AppStateService } from '../../core/app-state.service';
+import { BackendApiService } from '../../core/backend-api.service';
 
 type AuthTab = 'login' | 'register';
 
@@ -13,6 +13,7 @@ type AuthTab = 'login' | 'register';
 export class AuthComponent {
   activeTab: AuthTab = 'login';
   successMessage = '';
+  errorMessage = '';
 
   readonly loginForm = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -29,12 +30,13 @@ export class AuthComponent {
   constructor(
     private readonly formBuilder: FormBuilder,
     private readonly router: Router,
-    private readonly appState: AppStateService
+    private readonly api: BackendApiService
   ) {}
 
   setTab(tab: AuthTab): void {
     this.activeTab = tab;
     this.successMessage = '';
+    this.errorMessage = '';
   }
 
   submitLogin(): void {
@@ -43,15 +45,18 @@ export class AuthComponent {
       return;
     }
 
-    this.appState.updateUser({
-      fullName: 'Returning User',
-      email: this.loginForm.controls.email.value
+    this.errorMessage = '';
+    this.api.login(this.loginForm.getRawValue()).subscribe({
+      next: () => {
+        this.successMessage = 'Login successful. Redirecting to dashboard...';
+        window.setTimeout(() => {
+          void this.router.navigate(['/dashboard']);
+        }, 900);
+      },
+      error: () => {
+        this.errorMessage = 'Backend unavailable. Please start Spring Boot server on port 8080.';
+      }
     });
-
-    this.successMessage = 'Login successful. Redirecting to dashboard...';
-    window.setTimeout(() => {
-      void this.router.navigate(['/dashboard']);
-    }, 900);
   }
 
   submitRegister(): void {
@@ -68,14 +73,17 @@ export class AuthComponent {
       return;
     }
 
-    this.appState.updateUser({
-      fullName: payload.fullName,
-      email: payload.email
+    this.errorMessage = '';
+    this.api.register(payload).subscribe({
+      next: () => {
+        this.successMessage = 'Account created successfully. Redirecting to dashboard...';
+        window.setTimeout(() => {
+          void this.router.navigate(['/dashboard']);
+        }, 900);
+      },
+      error: () => {
+        this.errorMessage = 'Backend unavailable. Please start Spring Boot server on port 8080.';
+      }
     });
-
-    this.successMessage = 'Account created successfully. Redirecting to dashboard...';
-    window.setTimeout(() => {
-      void this.router.navigate(['/dashboard']);
-    }, 900);
   }
 }

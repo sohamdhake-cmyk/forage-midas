@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AppStateService } from '../../core/app-state.service';
+import { BackendApiService } from '../../core/backend-api.service';
 
 type QuestionnaireControlName =
   | 'fullName'
@@ -19,8 +19,9 @@ type QuestionnaireControlName =
   templateUrl: './questionnaire.component.html',
   styleUrls: ['./questionnaire.component.scss']
 })
-export class QuestionnaireComponent {
+export class QuestionnaireComponent implements OnInit {
   currentStep = 0;
+  errorMessage = '';
   readonly stepLabels = ['Personal', 'Income', 'Deductions', 'Tax Paid', 'Review'];
 
   readonly questionnaireForm = this.formBuilder.nonNullable.group({
@@ -38,13 +39,21 @@ export class QuestionnaireComponent {
   constructor(
     private readonly formBuilder: FormBuilder,
     private readonly router: Router,
-    private readonly appState: AppStateService
-  ) {
-    const snapshot = this.appState.questionnaireSnapshot;
-    if (snapshot.fullName) {
-      this.questionnaireForm.patchValue(snapshot);
-      this.questionnaireForm.controls.declarationAccepted.setValue(true);
-    }
+    private readonly api: BackendApiService
+  ) {}
+
+  ngOnInit(): void {
+    this.api.getQuestionnaire().subscribe({
+      next: (data) => {
+        if (data.fullName) {
+          this.questionnaireForm.patchValue(data);
+          this.questionnaireForm.controls.declarationAccepted.setValue(true);
+        }
+      },
+      error: () => {
+        this.errorMessage = 'Could not load saved questionnaire from backend.';
+      }
+    });
   }
 
   get progressPercent(): number {
@@ -75,18 +84,26 @@ export class QuestionnaireComponent {
     }
 
     const formValue = this.questionnaireForm.getRawValue();
-    this.appState.saveQuestionnaire({
-      fullName: formValue.fullName,
-      panNumber: formValue.panNumber,
-      annualSalary: formValue.annualSalary,
-      otherIncome: formValue.otherIncome,
-      section80C: formValue.section80C,
-      section80D: formValue.section80D,
-      tdsPaid: formValue.tdsPaid,
-      advanceTax: formValue.advanceTax
-    });
-
-    void this.router.navigate(['/summary']);
+    this.errorMessage = '';
+    this.api
+      .saveQuestionnaire({
+        fullName: formValue.fullName,
+        panNumber: formValue.panNumber,
+        annualSalary: formValue.annualSalary,
+        otherIncome: formValue.otherIncome,
+        section80C: formValue.section80C,
+        section80D: formValue.section80D,
+        tdsPaid: formValue.tdsPaid,
+        advanceTax: formValue.advanceTax
+      })
+      .subscribe({
+        next: () => {
+          void this.router.navigate(['/summary']);
+        },
+        error: () => {
+          this.errorMessage = 'Could not save questionnaire to backend.';
+        }
+      });
   }
 
   private isStepValid(step: number): boolean {

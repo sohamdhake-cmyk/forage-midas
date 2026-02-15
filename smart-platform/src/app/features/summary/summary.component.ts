@@ -1,36 +1,29 @@
-import { Component } from '@angular/core';
-import { combineLatest, map } from 'rxjs';
-import { AppStateService } from '../../core/app-state.service';
+import { Component, OnInit } from '@angular/core';
+import { BackendApiService, SummaryResponse } from '../../core/backend-api.service';
 
 @Component({
   selector: 'app-summary',
   templateUrl: './summary.component.html',
   styleUrls: ['./summary.component.scss']
 })
-export class SummaryComponent {
-  readonly vm$ = combineLatest([this.appState.user$, this.appState.questionnaire$]).pipe(
-    map(([user, q]) => {
-      const grossIncome = q.annualSalary + q.otherIncome;
-      const totalDeductions = q.section80C + q.section80D;
-      const taxableIncome = Math.max(grossIncome - totalDeductions, 0);
-      const estimatedTax = Math.max(Math.round(taxableIncome * 0.1 - (q.tdsPaid + q.advanceTax)), 0);
+export class SummaryComponent implements OnInit {
+  vm: SummaryResponse | null = null;
+  errorMessage = '';
 
-      return {
-        userName: user.fullName,
-        hasData: grossIncome > 0 || totalDeductions > 0,
-        items: [
-          { label: 'Gross Income', value: this.formatCurrency(grossIncome) },
-          { label: 'Total Deductions', value: this.formatCurrency(totalDeductions) },
-          { label: 'Taxable Income', value: this.formatCurrency(taxableIncome) },
-          { label: 'Estimated Tax Due', value: this.formatCurrency(estimatedTax) }
-        ]
-      };
-    })
-  );
+  constructor(private readonly api: BackendApiService) {}
 
-  constructor(private readonly appState: AppStateService) {}
+  ngOnInit(): void {
+    this.api.getSummary().subscribe({
+      next: (response) => {
+        this.vm = response;
+      },
+      error: () => {
+        this.errorMessage = 'Could not load summary from backend.';
+      }
+    });
+  }
 
-  private formatCurrency(value: number): string {
+  formatCurrency(value: number): string {
     return `₹${value.toLocaleString('en-IN')}`;
   }
 }
