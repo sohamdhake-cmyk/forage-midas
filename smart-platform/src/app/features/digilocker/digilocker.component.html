@@ -1,0 +1,20 @@
+<section class="page-card p-4 p-md-5">
+  <h1 class="h3 text-primary mb-2">DigiLocker Integration</h1>
+  <p class="text-secondary mb-4">Securely fetch documents to reduce manual data entry.</p>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-6" *ngFor="let doc of documents">
+      <div class="doc-item d-flex align-items-center justify-content-between rounded-4 p-3">
+        <span>{{ doc.name }}</span>
+        <span class="badge" [class.text-bg-success]="doc.linked" [class.text-bg-light]="!doc.linked">
+          {{ doc.linked ? 'Linked' : 'Not linked' }}
+        </span>
+      </div>
+      <button type="button" class="btn btn-sm btn-outline-primary mt-2" (click)="toggleLink(doc)">
+        {{ doc.linked ? 'Unlink' : 'Link now' }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-danger mb-0" role="alert">{{ errorMessage }}</div>
+</section>
